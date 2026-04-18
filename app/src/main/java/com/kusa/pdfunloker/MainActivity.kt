@@ -152,6 +152,9 @@ fun MainScreen(uri: Uri?, modifier: Modifier = Modifier) {
                     if (passwordText.isNotBlank()) {
                         passwordManager.savePassword(passwordText)
                         android.widget.Toast.makeText(context, "パスワードを保存しました", android.widget.Toast.LENGTH_SHORT).show()
+                        // 【修正】保存後に画面を閉じる
+                        //activity?.finish()
+                        (context as? android.app.Activity)?.finish()
                     }
                 },
                 modifier = androidx.compose.ui.Modifier.fillMaxWidth()
