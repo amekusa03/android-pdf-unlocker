@@ -36,11 +36,6 @@
 
 ## 開発環境のトラブルシューティング
 
-ビルド時に `Task '{' not found` エラーが発生した場合は、以下の点を確認してください。
-
-1. `app/build.gradle` の `dependencies` ブロック等の括弧 `{ }` の閉じ忘れがないか。
-2. Android Studio の **Run Configuration** (Edit Configurations) の `Tasks` 欄に、誤って `{` 文字が入っていないか。
-
 ---
 
 ## ライセンス

@@ -19,3 +19,4 @@ local.properties
 *.jks
 *.hprof
 /app/doc
+PDFUnloker.code-workspace

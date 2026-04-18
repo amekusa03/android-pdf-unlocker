@@ -51,6 +51,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
