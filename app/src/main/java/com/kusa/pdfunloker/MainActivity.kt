@@ -66,10 +66,7 @@ class MainActivity : ComponentActivity() {
         passwordManager = PasswordManager(this)
         PDFBoxResourceLoader.init(applicationContext)
 
-        val intentData: Uri? = intent.data
-        if (intent.action == Intent.ACTION_VIEW && intentData != null) {
-            handlePdfIntent(intentData)
-        }
+        intent?.let { handleIntent(it) }
 
         setContent {
             PDFUnlokerTheme {
@@ -83,7 +80,7 @@ class MainActivity : ComponentActivity() {
                         )
                     } else {
                         MainScreen(
-                            uri = intentData,
+                            uri = intent.data,
                             passwordManager = passwordManager,
                             modifier = Modifier.padding(innerPadding)
                         )
@@ -98,32 +95,64 @@ class MainActivity : ComponentActivity() {
         File(cacheDir, UNLOCKED_CACHE_FILE).delete()
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent) {
+        val intentData: Uri? = intent.data
+        if (intent.action == Intent.ACTION_VIEW && intentData != null) {
+            handlePdfIntent(intentData)
+        }
+    }
+
     private fun closeViewer() {
         File(cacheDir, UNLOCKED_CACHE_FILE).delete()
         unlockedFile.value = null
     }
 
     private fun handlePdfIntent(uri: Uri) {
-        val savedPassword = passwordManager.getPassword()
-        if (savedPassword == null) {
-            Toast.makeText(this, "パスワードを設定してください", Toast.LENGTH_LONG).show()
-            return
-        }
-
         lifecycleScope.launch(Dispatchers.IO) {
+            val tempInFile = File(cacheDir, "temp_input.pdf")
             try {
+                // content:// URI から一度ローカルファイルにコピー（シーク可能にするため）
                 contentResolver.openInputStream(uri)?.use { inputStream ->
-                    val document = PDDocument.load(inputStream, savedPassword)
+                    tempInFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
 
-                    if (document.isEncrypted) {
-                        document.setAllSecurityToBeRemoved(true)
+                if (!tempInFile.exists()) throw Exception("ファイルのコピーに失敗しました")
+
+                // まずはパスワードなしで試行
+                var document: PDDocument? = null
+                try {
+                    document = PDDocument.load(tempInFile)
+                } catch (e: InvalidPasswordException) {
+                    // パスワードが必要な場合、保存されたパスワードを使用
+                    val savedPassword = passwordManager.getPassword()
+                    if (savedPassword == null) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@MainActivity, "このファイルは保護されています。パスワードを設定してください。", Toast.LENGTH_LONG).show()
+                        }
+                        return@launch
+                    }
+                    document = PDDocument.load(tempInFile, savedPassword)
+                }
+
+                document?.use { doc ->
+                    if (doc.isEncrypted) {
+                        doc.setAllSecurityToBeRemoved(true)
                     }
 
                     val outputFile = File(cacheDir, UNLOCKED_CACHE_FILE)
-                    document.save(outputFile)
-                    document.close()
-
+                    doc.save(outputFile)
+                    
                     withContext(Dispatchers.Main) {
+                        // unlockedFileをnullにしてからセットすることで、Composeに再描画を促す
+                        unlockedFile.value = null
                         unlockedFile.value = outputFile
                     }
                 }
@@ -133,9 +162,11 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    android.util.Log.e("PDF_UNLOCK", "解除失敗: ${e.message}")
-                    Toast.makeText(this@MainActivity, "PDFの処理に失敗しました。", Toast.LENGTH_LONG).show()
+                    android.util.Log.e("PDF_UNLOCK", "解除失敗", e)
+                    Toast.makeText(this@MainActivity, "PDFの処理に失敗しました: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
+            } finally {
+                if (tempInFile.exists()) tempInFile.delete()
             }
         }
     }
@@ -149,9 +180,10 @@ class MainActivity : ComponentActivity() {
 fun PdfViewerScreen(file: File, onClose: () -> Unit, modifier: Modifier = Modifier) {
     BackHandler(onBack = onClose)
 
-    val pfd = remember { ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY) }
-    val renderer = remember { PdfRenderer(pfd) }
-    DisposableEffect(Unit) {
+    // file を key にすることで、ファイルが変わった際に再初期化されるようにする
+    val pfd = remember(file) { ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY) }
+    val renderer = remember(pfd) { PdfRenderer(pfd) }
+    DisposableEffect(pfd, renderer) {
         onDispose {
             renderer.close()
             pfd.close()
