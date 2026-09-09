@@ -1,35 +1,37 @@
 # PDF Unloker
 
-パスワード保護されたPDF（給与明細など）を、あらかじめ設定したパスワードで自動的に解除し、アプリ内ビューアーで表示するAndroidアプリです。
+An Android application that automatically unlocks password-protected PDFs (such as pay stubs) using a pre-configured password and displays them in an in-app viewer.
 
-## 主な機能
+[Japanese Version (日本語版はこちら)](README.JP.md)
 
-- **自動パスワード解除**: Gmail等の添付PDFをタップするだけで、設定済みパスワードで自動アンロック
-- **アプリ内PDF表示**: 解除後のPDFをアプリ内でそのまま表示（外部アプリ不要）
-- **安全なパスワード保存**: `EncryptedSharedPreferences`（AES256）でパスワードを暗号化保存
+## Key Features
 
-## 動作フロー
+- **Automatic Password Unlocking**: Simply tap a PDF attachment in apps like Gmail, and it will be unlocked automatically using your saved password.
+- **In-App PDF Viewer**: View unlocked PDFs directly inside the app without needing external tools.
+- **Secure Password Storage**: Passwords are saved securely using `EncryptedSharedPreferences` (AES-256).
 
-1. **初回設定**: アプリを起動してパスワード（生年月日など）を保存
-2. **PDFを開く**: Gmail等でPDF添付をタップ → アプリ選択で本アプリを選択
-3. **自動解除 → 表示**: バックグラウンドで解除処理が走り、完了次第アプリ内ビューアーが起動
+## Workflow
 
-## 技術構成
+1. **Initial Setup**: Launch the app and save your password (e.g., date of birth).
+2. **Open a PDF**: Tap a PDF attachment in Gmail or another app, then select "PDFUnloker" from the app chooser.
+3. **Auto-Unlock & Display**: Unlocking process runs in the background and opens the in-app viewer upon completion.
 
-| 項目 | 内容 |
-|------|------|
-| 対象OS | Android 6.0 (API 23) 以上 |
+## Technical Stack
+
+| Item | Details |
+|------|---------|
+| Target OS | Android 6.0 (API 23) or higher |
 | UI | Jetpack Compose |
-| PDF解析 | PdfBox-Android 2.0.27.0 |
-| PDFレンダリング | Android標準 `PdfRenderer` (API 21+) |
-| パスワード保管 | `EncryptedSharedPreferences` (security-crypto 1.0.0) |
+| PDF Parsing | PdfBox-Android 2.0.27.0 |
+| PDF Rendering | Standard Android `PdfRenderer` (API 21+) |
+| Password Storage | `EncryptedSharedPreferences` (security-crypto 1.0.0) |
 
-## セキュリティ設計
+## Security Features
 
-- 解除済み一時ファイルはビューアーを閉じた時点（`onDestroy` または 戻るボタン押下時）で削除
-- `android:allowBackup="false"` によりAndroidバックアップへの漏洩を防止
-- `FileProvider` のスコープは `cache-path` のみに限定
+- Temporary unlocked files are automatically deleted when the viewer is closed (`onDestroy` or Back button pressed).
+- Prevents leakage to Android Backups via `android:allowBackup="false"`.
+- `FileProvider` scope is strictly restricted to `cache-path`.
 
-## ライセンス
+## License
 
 MIT License

@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">PDFUnloker</string>
+    <string name="error_file_copy_failed">ファイルのコピーに失敗しました</string>
+    <string name="toast_file_protected_set_password">このファイルは保護されています。パスワードを設定してください。</string>
+    <string name="toast_incorrect_password">パスワードが正しくありません。設定を確認してください。</string>
+    <string name="toast_pdf_process_failed">PDFの処理に失敗しました: %1$s</string>
+    <string name="cd_pdf_page">ページ %1$d</string>
+    <string name="title_settings">PDF Unloker 設定</string>
+    <string name="target_file">対象ファイル: %1$s</string>
+    <string name="msg_auto_launch_viewer">解析が終わると自動的にPDFビューアーが起動します。</string>
+    <string name="msg_set_common_password">給与明細などの共通パスワードを設定してください。</string>
+    <string name="label_common_password">共通パスワード</string>
+    <string name="toast_password_saved">パスワードを保存しました</string>
+    <string name="btn_save_password">パスワードを保存</string>
+    <string name="btn_close">閉じる</string>
+    <string name="msg_usage_instructions">使い方: この画面でパスワードを保存した後、Gmail等でPDFを開く際にこのアプリを選択してください。</string>
+
+    <string name="dialog_title_enter_password">パスワードの入力</string>
+    <string name="dialog_msg_enter_password">このPDFファイルのパスワードを入力してください。</string>
+    <string name="label_password">パスワード</string>
+    <string name="btn_unlock">解除</string>
+    <string name="btn_cancel">キャンセル</string>
+</resources>

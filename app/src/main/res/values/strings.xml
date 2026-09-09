@@ -1,3 +1,23 @@
 <resources>
     <string name="app_name">PDFUnloker</string>
+    <string name="error_file_copy_failed">Failed to copy file.</string>
+    <string name="toast_file_protected_set_password">This file is protected. Please set a password.</string>
+    <string name="toast_incorrect_password">Incorrect password. Please check your settings.</string>
+    <string name="toast_pdf_process_failed">Failed to process PDF: %1$s</string>
+    <string name="cd_pdf_page">Page %1$d</string>
+    <string name="title_settings">PDF Unloker Settings</string>
+    <string name="target_file">Target File: %1$s</string>
+    <string name="msg_auto_launch_viewer">The PDF viewer will launch automatically once processing is complete.</string>
+    <string name="msg_set_common_password">Please set a common password for protected PDFs (e.g. pay stubs).</string>
+    <string name="label_common_password">Common Password</string>
+    <string name="toast_password_saved">Password saved</string>
+    <string name="btn_save_password">Save Password</string>
+    <string name="btn_close">Close</string>
+    <string name="msg_usage_instructions">How to use: After saving your password on this screen, select this app when opening a PDF from Gmail or other apps.</string>
+
+    <string name="dialog_title_enter_password">Enter Password</string>
+    <string name="dialog_msg_enter_password">Please enter the password for this PDF file.</string>
+    <string name="label_password">Password</string>
+    <string name="btn_unlock">Unlock</string>
+    <string name="btn_cancel">Cancel</string>
 </resources>
