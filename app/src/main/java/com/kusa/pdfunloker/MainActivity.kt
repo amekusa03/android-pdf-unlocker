@@ -15,6 +15,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -23,7 +24,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -355,6 +362,11 @@ fun PdfViewerScreen(file: File, onClose: () -> Unit, modifier: Modifier = Modifi
             LocalConfiguration.current.screenWidthDp.dp.toPx().toInt()
         }
 
+        // ピンチズーム（拡大・縮小）とドラッグ（パン）用の状態
+        var scale by remember { mutableStateOf(1f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+
+        /* 従来実装
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -367,6 +379,78 @@ fun PdfViewerScreen(file: File, onClose: () -> Unit, modifier: Modifier = Modifi
                     targetWidthPx = screenWidthPx,
                     modifier = Modifier.padding(vertical = 2.dp)
                 )
+            }
+        }
+        */
+
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(Color(0xFF424242))
+                .clipToBounds()
+                .pointerInput(Unit) {
+                    // ダブルタップで等倍・拡大を切り替え
+                    detectTapGestures(
+                        onDoubleTap = { tapOffset ->
+                            if (scale > 1f) {
+                                scale = 1f
+                                offset = Offset.Zero
+                            } else {
+                                val targetScale = 2.5f
+                                scale = targetScale
+                                val maxX = size.width * (1f - targetScale)
+                                val maxY = size.height * (1f - targetScale)
+                                val targetOffset = tapOffset * (1f - targetScale)
+                                offset = Offset(
+                                    x = targetOffset.x.coerceIn(maxX, 0f),
+                                    y = targetOffset.y.coerceIn(maxY, 0f)
+                                )
+                            }
+                        }
+                    )
+                }
+                .pointerInput(Unit) {
+                    // ピンチ操作による拡大縮小とパン移動
+                    detectTransformGestures { centroid, pan, zoom, _ ->
+                        val oldScale = scale
+                        val newScale = (scale * zoom).coerceIn(1f, 5f)
+                        if (newScale == 1f) {
+                            scale = 1f
+                            offset = Offset.Zero
+                        } else {
+                            // ピンチ中心を基準にズーム・パン移動を反映
+                            val rawOffset = (offset + pan) + (centroid - offset) * (1f - newScale / oldScale)
+                            val maxX = size.width * (1f - newScale)
+                            val maxY = size.height * (1f - newScale)
+                            scale = newScale
+                            offset = Offset(
+                                x = rawOffset.x.coerceIn(maxX, 0f),
+                                y = rawOffset.y.coerceIn(maxY, 0f)
+                            )
+                        }
+                    }
+                }
+        ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offset.x
+                        translationY = offset.y
+                        transformOrigin = TransformOrigin(0f, 0f)
+                    },
+                userScrollEnabled = scale <= 1.05f
+            ) {
+                items(renderer.pageCount) { index ->
+                    PdfPageItem(
+                        renderer = renderer,
+                        pageIndex = index,
+                        targetWidthPx = (screenWidthPx * 2).coerceAtMost(2160),
+                        modifier = Modifier.padding(vertical = 2.dp)
+                    )
+                }
             }
         }
     } else {
